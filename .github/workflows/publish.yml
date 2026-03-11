@@ -1,12 +1,13 @@
-# CD: Publish to ClawHub on merge to main
-name: Publish to ClawHub
+# CD: Publish to skill distribution domains on merge to main
+# Domain registry: doc/SKILL_DOMAINS.md
+name: Publish Skills
 
 on:
   push:
     branches: [main]
 
 jobs:
-  publish:
+  publish-clawhub:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,3 +49,25 @@ jobs:
             --version "$VERSION" \
             --changelog "$CHANGELOG" \
             --tags latest
+
+  # Sundial Hub: Claude, Cursor, Gemini, Codex, etc. (see doc/SKILL_DOMAINS.md)
+  # Set SUNDIAL_TOKEN secret to enable. Skip if unset (can't check secret in if).
+  publish-sundial:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Publish to Sundial
+        env:
+          SUNDIAL_TOKEN: ${{ secrets.SUNDIAL_TOKEN }}
+        run: |
+          if [ -z "$SUNDIAL_TOKEN" ]; then
+            echo "Skipping Sundial (SUNDIAL_TOKEN not set). Add secret to enable."
+            exit 0
+          fi
+          npx sundial-hub push . || echo "Sundial push failed; check sundialhub.com/docs for CI auth"

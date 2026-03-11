@@ -1,5 +1,5 @@
 #!/bin/bash
-# watch-publish.sh — Monitor Publish to ClawHub workflow via Wander
+# watch-publish.sh — Monitor Publish Skills workflow via Wander
 # Run from openclaw-uninstall repo. Requires Wander cloned (sibling or WANDER_DIR).
 
 set -e

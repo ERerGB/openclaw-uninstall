@@ -35,7 +35,10 @@ cd openclaw-uninstall
 
 ## CD
 
-Merges to `main` auto-publish to ClawHub via [`.github/workflows/publish.yml`](.github/workflows/publish.yml). Requires `CLAWHUB_TOKEN` repo secret (from `clawhub login` or ClawHub settings).
+Merges to `main` auto-publish to skill domains via [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
+
+- **ClawHub** (OpenClaw): `CLAWHUB_TOKEN` required
+- **Sundial Hub** (Claude, Cursor, Gemini, etc.): `SUNDIAL_TOKEN` optional — see [doc/SKILL_DOMAINS.md](doc/SKILL_DOMAINS.md)
 
 **Monitor with Wander**: `./scripts/watch-publish.sh` (see [doc/WANDER.md](doc/WANDER.md))
 
