@@ -28,8 +28,9 @@ do_install() {
   if [[ -d "$HOME/.openclaw/skills/uninstaller" ]]; then
     echo "  ✓ Already at ~/.openclaw/skills/uninstaller"
   else
-    echo "  Running: cp -r $SKILL_DIR ~/.openclaw/skills/uninstaller"
-    cp -r "$SKILL_DIR" ~/.openclaw/skills/uninstaller
+    echo "  Running: mkdir -p ~/.openclaw/skills && cp -r $SKILL_DIR ~/.openclaw/skills/uninstaller"
+    mkdir -p "$HOME/.openclaw/skills"
+    cp -r "$SKILL_DIR" "$HOME/.openclaw/skills/uninstaller"
     echo "  ✓ Copied"
   fi
   echo ""
@@ -74,6 +75,10 @@ case "$step" in
   *)
     do_install
     do_verify
-    echo "Next: run ./scripts/debug-flow.sh 3 for uninstall step"
+    if [[ "$DEBUG" == "true" ]]; then
+      do_uninstall
+    else
+      echo "Next: run ./scripts/debug-flow.sh 3 or ./scripts/debug-flow.sh --debug for uninstall"
+    fi
     ;;
 esac
