@@ -92,9 +92,10 @@ if [[ -d "$STATE_DIR" ]]; then
   rm -rf "$STATE_DIR"
 fi
 
-# 4. Delete profile dirs
+# 4. Delete profile dirs (exclude .openclaw-backup-* — those are preserve backups)
 for d in "$HOME"/.openclaw-*; do
   [[ -d "$d" ]] || continue
+  [[ "$d" == *"/.openclaw-backup-"* ]] && continue
   log "Removing profile dir: $d"
   rm -rf "$d"
 done
