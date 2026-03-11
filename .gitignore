@@ -11,8 +11,6 @@ Thumbs.db
 # Logs (if any local test logs)
 *.log
 
-# ClawHub installs (when testing locally)
-skills/
-# Keep .github/skills/ for GitHub Copilot
-!.github/skills/
+# ClawHub installs (root-level only; .github/skills/ for Copilot is kept)
+/skills/
 .clawhub/

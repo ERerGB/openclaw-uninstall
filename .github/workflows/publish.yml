@@ -72,19 +72,23 @@ jobs:
           fi
           npx sundial-hub push . || echo "Sundial push failed; check sundialhub.com/docs for CI auth"
 
-  # GitHub Copilot: .github/skills/ structure. Verify root SKILL.md matches.
-  verify-copilot-skill:
+  # SSOT: Root SKILL.md is canonical; .github/skills/ and skill-dist/ are symlinks.
+  verify-skill-ssot:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify Copilot skill in sync
+      - name: Verify skill symlinks resolve
         run: |
           diff SKILL.md .github/skills/uninstaller/SKILL.md || {
-            echo "::error::SKILL.md and .github/skills/uninstaller/SKILL.md must match. Run: cp SKILL.md .github/skills/uninstaller/SKILL.md"
+            echo "::error::.github/skills/uninstaller/SKILL.md must be symlink to ../../../SKILL.md"
             exit 1
           }
-          echo "✅ Copilot skill in sync"
+          diff SKILL.md skill-dist/openclaw-uninstall/SKILL.md || {
+            echo "::error::skill-dist/openclaw-uninstall/SKILL.md must be symlink to ../../SKILL.md"
+            exit 1
+          }
+          echo "✅ Skill SSOT verified (symlinks resolve to root SKILL.md)"
 
   # ghcr.io (OCI): Any agent using OCI registries. Uses GITHUB_TOKEN (auto-provided).
   publish-ghcr:
@@ -104,7 +108,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           namespace: ${{ github.repository_owner }}
-          path: .
+          path: ./skill-dist
 
   # SkillCreator.ai: Add when SKILLCREATOR_TOKEN available (creator approval required).
   publish-skillcreator:

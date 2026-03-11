@@ -2,6 +2,8 @@
 
 Complete checklist for publishing the uninstaller skill across all distribution domains.
 
+**Layout (SSOT)**: Root `SKILL.md` is the single source. `.github/skills/uninstaller/SKILL.md` and `skill-dist/openclaw-uninstall/SKILL.md` are symlinks to it. No sync script; edit root only.
+
 ---
 
 ## Overview
@@ -85,7 +87,8 @@ npx sundial-hub push .       # Run after each release
 |--------|-----------------|
 | ClawHub | `clawhub install uninstaller` |
 | skills.sh | `npx skills add ERerGB/openclaw-uninstall` |
-| GitHub Copilot | Clone repo — skill in `.github/skills/uninstaller/` |
+| GitHub Copilot | Clone repo — skill in `.github/skills/uninstaller/` (symlink) |
+| Cursor (personal) | `./scripts/install-personal.sh` — symlink to repo |
 | Sundial | `npx sundial-hub add uninstaller` (if published) |
 | ghcr.io | `skr install ghcr.io/ERerGB/openclaw-uninstall:latest` |
 
