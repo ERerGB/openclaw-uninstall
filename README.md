@@ -37,6 +37,8 @@ cd openclaw-uninstall
 
 Merges to `main` auto-publish to ClawHub via [`.github/workflows/publish.yml`](.github/workflows/publish.yml). Requires `CLAWHUB_TOKEN` repo secret (from `clawhub login` or ClawHub settings).
 
+**Monitor with Wander**: `./scripts/watch-publish.sh` (see [doc/WANDER.md](doc/WANDER.md))
+
 ## Disclaimer
 
 This skill is community-maintained and has no commercial affiliation with OpenClaw. Based on [OpenClaw official docs](https://docs.openclaw.ai/install/uninstall).
