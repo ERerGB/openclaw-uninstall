@@ -62,13 +62,23 @@ else
   echo "[通过] npm 全局包已移除"
 fi
 
-# 6. Processes
-if pgrep -f "openclaw" &>/dev/null; then
-  echo "[残留] 运行中的 openclaw 进程"
-  pgrep -af "openclaw" 2>/dev/null || true
-  FOUND=1
+# 6. Processes (pgrep or ps fallback)
+if command -v pgrep &>/dev/null; then
+  if pgrep -f "openclaw" &>/dev/null; then
+    echo "[残留] 运行中的 openclaw 进程"
+    pgrep -af "openclaw" 2>/dev/null || true
+    FOUND=1
+  else
+    echo "[通过] 无 openclaw 进程"
+  fi
 else
-  echo "[通过] 无 openclaw 进程"
+  if ps aux 2>/dev/null | grep -v grep | grep -q openclaw; then
+    echo "[残留] 运行中的 openclaw 进程"
+    ps aux 2>/dev/null | grep -v grep | grep openclaw || true
+    FOUND=1
+  else
+    echo "[通过] 无 openclaw 进程"
+  fi
 fi
 
 # 7. macOS app
