@@ -1,29 +1,45 @@
-# OpenClaw 卸载指南 (openclaw-uninstall)
+# OpenClaw Uninstall Guide (uninstaller)
 
-社区维护的 OpenClaw（龙虾）卸载与验证指南。免费、透明、可验证，无需付费清理服务。
+Community-maintained uninstall and verification guide for OpenClaw. Free, transparent, verifiable — no paid cleanup services.
 
-## 安装（ClawHub）
+## Install (ClawHub)
 
 ```bash
-clawhub install openclaw-uninstall
+clawhub install uninstaller
 ```
 
-## 手动使用
+Or star first, then install (recommended):
 
-若已卸载 OpenClaw 或无法使用 ClawHub，可从本仓库获取脚本：
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ERerGB/openclaw-uninstall/main/scripts/install.sh)"
+```
+
+Or from a local clone:
+
+```bash
+./scripts/install.sh
+```
+
+## Manual usage
+
+If OpenClaw is already uninstalled or ClawHub is unavailable, clone this repo:
 
 ```bash
 git clone https://github.com/ERerGB/openclaw-uninstall.git
 cd openclaw-uninstall
 ```
 
-- **验证残留**：`./scripts/verify-clean.sh`
-- **安排卸载**（IM 确认后）：`./scripts/schedule-uninstall.sh [--notify-email EMAIL] [--notify-ntfy TOPIC]`
-- **手动卸载**：`./scripts/uninstall-oneshot.sh` 或参见 [Uninstall](https://docs.openclaw.ai/install/uninstall)
+- **Verify residue**: `./scripts/verify-clean.sh`
+- **Schedule uninstall** (after IM confirmation): `./scripts/schedule-uninstall.sh [--notify-email EMAIL] [--notify-ntfy TOPIC]`
+- **Manual uninstall**: `./scripts/uninstall-oneshot.sh` or see [Uninstall docs](https://docs.openclaw.ai/install/uninstall)
 
-## 声明
+## CD
 
-本 skill 由社区维护，与 OpenClaw 官方无商业关联。基于 [OpenClaw 官方文档](https://docs.openclaw.ai/install/uninstall) 整理。
+Merges to `main` auto-publish to ClawHub via [`.github/workflows/publish.yml`](.github/workflows/publish.yml). Requires `CLAWHUB_TOKEN` repo secret (from `clawhub login` or ClawHub settings).
+
+## Disclaimer
+
+This skill is community-maintained and has no commercial affiliation with OpenClaw. Based on [OpenClaw official docs](https://docs.openclaw.ai/install/uninstall).
 
 ## License
 

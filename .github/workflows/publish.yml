@@ -1,0 +1,51 @@
+# CD: Publish to ClawHub on merge to main
+name: Publish to ClawHub
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install clawhub
+        run: npm install -g clawhub
+
+      # Workaround: clawhub v0.7.0 does not send acceptLicenseTerms (clawhub#660)
+      - name: Patch clawhub for acceptLicenseTerms
+        run: |
+          CLAWHUB_PUBLISH="$(npm root -g)/clawhub/dist/cli/commands/publish.js"
+          if ! grep -q "acceptLicenseTerms" "$CLAWHUB_PUBLISH"; then
+            node -e "
+              const fs = require('fs');
+              const p = require('path');
+              const root = require('child_process').execSync('npm root -g', { encoding: 'utf8' }).trim();
+              const file = p.join(root, 'clawhub/dist/cli/commands/publish.js');
+              let c = fs.readFileSync(file, 'utf8');
+              c = c.replace('tags,\n            ...(forkOf', 'tags,\n            acceptLicenseTerms: true,\n            ...(forkOf');
+              fs.writeFileSync(file, c);
+            "
+          fi
+
+      - name: Login to ClawHub
+        run: clawhub login --token "${{ secrets.CLAWHUB_TOKEN }}" --no-browser
+
+      - name: Publish
+        run: |
+          VERSION="1.0.${{ github.run_number }}"
+          CHANGELOG="CD: ${{ github.sha }}"
+          clawhub publish . \
+            --slug uninstaller \
+            --name "Uninstaller" \
+            --version "$VERSION" \
+            --changelog "$CHANGELOG" \
+            --tags latest
