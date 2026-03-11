@@ -13,12 +13,13 @@ clawhub install openclaw-uninstall
 若已卸载 OpenClaw 或无法使用 ClawHub，可从本仓库获取脚本：
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/openclaw-uninstall.git
+git clone https://github.com/ERerGB/openclaw-uninstall.git
 cd openclaw-uninstall
 ```
 
 - **验证残留**：`./scripts/verify-clean.sh`
-- **手动卸载**：参见 SKILL.md 或 OpenClaw 官方 [Uninstall](https://docs.openclaw.ai/install/uninstall) 文档
+- **安排卸载**（IM 确认后）：`./scripts/schedule-uninstall.sh [--notify-email EMAIL] [--notify-ntfy TOPIC]`
+- **手动卸载**：`./scripts/uninstall-oneshot.sh` 或参见 [Uninstall](https://docs.openclaw.ai/install/uninstall)
 
 ## 声明
 

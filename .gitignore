@@ -10,3 +10,7 @@ Thumbs.db
 
 # Logs (if any local test logs)
 *.log
+
+# ClawHub installs (when testing locally)
+skills/
+.clawhub/
