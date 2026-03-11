@@ -1,0 +1,29 @@
+# Workflow Registry — Publish Skills pipeline
+# Used by Wander for check_window and notifications.
+# See doc/WANDER.md
+version: "1.0"
+
+project:
+  name: "openclaw-uninstall"
+  description: "Skill publish pipeline (ClawHub, ghcr.io, Sundial)"
+  last_updated: "2026-03-11"
+
+workflows:
+  - name: "publish.yml"
+    description: "Publish Skills — ClawHub, ghcr.io, Sundial"
+    check_window: 600
+    expected_duration: 180
+    category: "deploy"
+    priority: 2
+    tags:
+      - "cd"
+      - "publish"
+      - "skills"
+    metadata:
+      jobs:
+        - verify-copilot-skill
+        - publish-clawhub
+        - publish-sundial
+        - publish-ghcr
+        - publish-skillcreator
+      trigger: "push to main"

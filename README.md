@@ -2,10 +2,16 @@
 
 Community-maintained uninstall and verification guide for OpenClaw. Free, transparent, verifiable — no paid cleanup services.
 
-## Install (ClawHub)
+## Install
 
+**ClawHub** (OpenClaw):
 ```bash
 clawhub install uninstaller
+```
+
+**skills.sh** (Vercel — Claude, Cursor, Copilot, etc.):
+```bash
+npx skills add ERerGB/openclaw-uninstall
 ```
 
 Or star first, then install (recommended):
@@ -37,10 +43,9 @@ cd openclaw-uninstall
 
 Merges to `main` auto-publish to skill domains via [`.github/workflows/publish.yml`](.github/workflows/publish.yml):
 
-- **ClawHub** (OpenClaw): `CLAWHUB_TOKEN` required
-- **Sundial Hub** (Claude, Cursor, Gemini, etc.): `SUNDIAL_TOKEN` optional — see [doc/SKILL_DOMAINS.md](doc/SKILL_DOMAINS.md)
+- **ClawHub**, **ghcr.io**, **GitHub Copilot** (.github/skills/), **Sundial**, **SkillCreator** — see [doc/PUBLISH_PATH.md](doc/PUBLISH_PATH.md)
 
-**Monitor with Wander**: `./scripts/watch-publish.sh` (see [doc/WANDER.md](doc/WANDER.md))
+**Monitor with Wander**: `./scripts/watch-publish.sh` — background monitor with macOS notification. See [doc/WANDER.md](doc/WANDER.md) for fix loop when CI fails.
 
 ## Disclaimer
 

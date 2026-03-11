@@ -13,4 +13,6 @@ Thumbs.db
 
 # ClawHub installs (when testing locally)
 skills/
+# Keep .github/skills/ for GitHub Copilot
+!.github/skills/
 .clawhub/

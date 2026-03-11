@@ -51,7 +51,7 @@ jobs:
             --tags latest
 
   # Sundial Hub: Claude, Cursor, Gemini, Codex, etc. (see doc/SKILL_DOMAINS.md)
-  # Set SUNDIAL_TOKEN secret to enable. Skip if unset (can't check secret in if).
+  # Sundial has no --token; interactive login only. Job skips when SUNDIAL_TOKEN unset.
   publish-sundial:
     runs-on: ubuntu-latest
     steps:
@@ -71,3 +71,54 @@ jobs:
             exit 0
           fi
           npx sundial-hub push . || echo "Sundial push failed; check sundialhub.com/docs for CI auth"
+
+  # GitHub Copilot: .github/skills/ structure. Verify root SKILL.md matches.
+  verify-copilot-skill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify Copilot skill in sync
+        run: |
+          diff SKILL.md .github/skills/uninstaller/SKILL.md || {
+            echo "::error::SKILL.md and .github/skills/uninstaller/SKILL.md must match. Run: cp SKILL.md .github/skills/uninstaller/SKILL.md"
+            exit 1
+          }
+          echo "✅ Copilot skill in sync"
+
+  # ghcr.io (OCI): Any agent using OCI registries. Uses GITHUB_TOKEN (auto-provided).
+  publish-ghcr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish to ghcr.io
+        uses: andrewhowdencom/skr@main
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          namespace: ${{ github.repository_owner }}
+          path: .
+
+  # SkillCreator.ai: Add when SKILLCREATOR_TOKEN available (creator approval required).
+  publish-skillcreator:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Publish to SkillCreator
+        env:
+          SKILLCREATOR_TOKEN: ${{ secrets.SKILLCREATOR_TOKEN }}
+        run: |
+          if [ -z "$SKILLCREATOR_TOKEN" ]; then
+            echo "Skipping SkillCreator (SKILLCREATOR_TOKEN not set). Apply at skillcreator.ai/creators when available."
+            exit 0
+          fi
+          echo "SkillCreator publish: add CLI command when docs available"
+          exit 0
