@@ -107,13 +107,18 @@ jobs:
           rm -f skill-dist/openclaw-uninstall/SKILL.md
           cp SKILL.md skill-dist/openclaw-uninstall/SKILL.md
 
+      # GHCR requires lowercase namespace (repository_owner may have uppercase).
+      - name: Set lowercase namespace
+        id: ns
+        run: echo "ns=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Publish to ghcr.io
         uses: andrewhowdencom/skr@main
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          namespace: ${{ github.repository_owner }}
+          namespace: ${{ steps.ns.outputs.ns }}
           path: ./skill-dist
 
   # SkillCreator.ai: Add when SKILLCREATOR_TOKEN available (creator approval required).
