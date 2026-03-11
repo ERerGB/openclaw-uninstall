@@ -103,7 +103,9 @@ jobs:
 
       # skr fails with symlinks (archive/tar: write too long). Replace symlink with real file.
       - name: Resolve skill-dist symlink for OCI build
-        run: cp SKILL.md skill-dist/openclaw-uninstall/SKILL.md
+        run: |
+          rm -f skill-dist/openclaw-uninstall/SKILL.md
+          cp SKILL.md skill-dist/openclaw-uninstall/SKILL.md
 
       - name: Publish to ghcr.io
         uses: andrewhowdencom/skr@main
