@@ -41,7 +41,8 @@ jobs:
 
       - name: Publish
         run: |
-          VERSION="1.0.${{ github.run_number }}"
+          # run_number + run_attempt avoids "Version already exists" on re-runs
+          VERSION="1.0.${{ github.run_number }}.${{ github.run_attempt }}"
           CHANGELOG="CD: ${{ github.sha }}"
           clawhub publish . \
             --slug uninstaller \
