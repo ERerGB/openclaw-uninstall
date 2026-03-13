@@ -41,9 +41,8 @@ jobs:
 
       - name: Publish
         run: |
-          # run_number + run_attempt avoids "Version already exists" on re-runs
-          # Use prerelease suffix (1.0.15-1) for valid semver
-          VERSION="1.0.${{ github.run_number }}-${{ github.run_attempt }}"
+          # Use short SHA for unique version (avoids ClawHub "Version already exists")
+          VERSION="1.0.0-${GITHUB_SHA:0:7}"
           CHANGELOG="CD: ${{ github.sha }}"
           clawhub publish . \
             --slug uninstaller \
