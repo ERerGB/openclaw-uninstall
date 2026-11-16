@@ -9,7 +9,7 @@ description: "Guides users through safely uninstalling OpenClaw (龙虾). Use wh
 
 ## Install
 
-Star first, then install: `./scripts/install.sh` or `clawhub star uninstaller --yes && clawhub install uninstaller`
+Use `clawhub install uninstaller` when installation is requested. Starring a repository or package is a separate optional account action, never an installation prerequisite. The legacy `scripts/install.sh` attempts a star; use the direct install command unless the user also requested that action.
 
 ## Core statement
 
@@ -25,16 +25,16 @@ Users can trigger uninstall from WhatsApp / Telegram / Slack etc. After confirma
 
 ### Prerequisites (required)
 
-- **host=gateway**: When running `schedule-uninstall.sh`, the Agent must run on the host machine, not in sandbox. Pass `host=gateway` when calling exec. If `tools.exec.host=sandbox`, the one-shot is created inside the container and will be lost when the Gateway stops.
+- **Gateway host**: The scheduler must execute on the verified gateway host, not an unrelated container. In OpenClaw runtimes that expose it, `host=gateway` selects that host. In other agents use their supported authorized host mechanism; do not invent this argument or disable a sandbox. A sandbox-local job can disappear when the Gateway stops.
 - **Supported platforms**: macOS, Linux (including WSL2). Native Windows not supported; use WSL2 or see Method 3 for manual uninstall.
 - **Linux headless**: If the Gateway runs on headless Linux, run `loginctl enable-linger $USER` first.
 - **WSL2**: If `systemd-run` is unavailable, the script falls back to nohup.
 
 ### Flow
 
-1. User sends: "Uninstall" or "How to uninstall OpenClaw"
-2. Agent replies: "Confirm complete uninstall of OpenClaw? This action is irreversible. Reply 'confirm' to continue."
-3. User replies: "confirm"
+1. Distinguish an execution request from “How to uninstall OpenClaw”, which asks for guidance only. Resolve the gateway host, state paths, data to preserve, and intended scope.
+2. Present the concrete removal and backup/preservation scope. Ask only for missing authorization; do not repeat a specific removal scope the user already authorized.
+3. Proceed only within that authorized scope; a general question does not authorize removal.
 4. Agent may ask: "Notify when done? Reply 'email user@example.com' or 'ntfy my-topic' or 'no'"
 5. Agent calls `scripts/schedule-uninstall.sh` with optional notify params
 6. Agent replies: "Uninstall scheduled. Session will disconnect in ~15 seconds. Results written to /tmp/openclaw-uninstall.log"
@@ -44,10 +44,10 @@ Users can trigger uninstall from WhatsApp / Telegram / Slack etc. After confirma
 
 Script path is usually `<workspace>/skills/uninstaller/scripts/` or `~/.openclaw/skills/uninstaller/scripts/`.
 
-**Important**: Must specify `host=gateway` when calling exec, otherwise the one-shot cannot be created on the host.
+**Important**: Verify the execution host using the current runtime. `host=gateway` is an OpenClaw-specific option, not a portable exec argument.
 
 ```bash
-# No notification (host=gateway required)
+# No notification (run on the verified gateway host)
 ./scripts/schedule-uninstall.sh
 
 # Email notification
@@ -56,11 +56,11 @@ Script path is usually `<workspace>/skills/uninstaller/scripts/` or `~/.openclaw
 # ntfy notification
 ./scripts/schedule-uninstall.sh --notify-ntfy "my-uninstall-topic"
 
-# Preserve skills, logs, preferences (optional; reinstall without losing data)
-./scripts/schedule-uninstall.sh --preserve "skills,logs,preferences"
-./scripts/uninstall-oneshot.sh --preserve all
+# Preserve the selected state directory (optional)
+./scripts/schedule-uninstall.sh --preserve-state
+./scripts/uninstall-oneshot.sh --preserve-state
 
-# Skip backup (default: backup all before delete)
+# Skip the default limited backup attempt
 ./scripts/schedule-uninstall.sh --no-backup
 
 # Also remove ~/.openclaw-* profile dirs (default: only removes default STATE_DIR)
@@ -127,12 +127,12 @@ systemctl --user daemon-reload
 
 ## Notes
 
-- **Default backup**: Uninstall backs up all data (skills, logs, preferences, credentials) to `~/.openclaw-backup-YYYYMMDD-HHMMSS/` before delete. Use `--no-backup` to skip.
+- **Backup scope**: The script first attempts `openclaw backup create --no-include-workspace`. Its manual fallback copies selected skills, sessions, configuration and credentials, not the complete workspace. Inspect the resulting archive/copies before relying on them. If a complete backup is required, prepare and verify it separately before scheduling deletion; do not describe an attempted backup as complete. `--no-backup` skips this attempt.
 - **Multiple profiles**: Only the default `~/.openclaw` is removed by default. Use `--all-profiles` to also remove `~/.openclaw-<profile>` dirs.
 - **Remote mode**: Run on the gateway host
 - **Source install**: Uninstall the service first, then remove the repo
 - **IM uninstall failed**: If schedule-uninstall errors (e.g. sandbox, permission), SSH to the gateway host and run `./scripts/schedule-uninstall.sh` or `./scripts/uninstall-oneshot.sh` manually
-- **Preserve data**: Use `--preserve "skills,logs,preferences"` or `--preserve all` (includes credentials). Backup goes to `~/.openclaw-backup-YYYYMMDD-HHMMSS/`
+- **Preserve data**: Use `--preserve-state` to retain the selected state directory; this also skips its backup. Selective `--preserve` is not implemented. Do not combine preservation with `--all-profiles`: the latter still removes other profile directories. Keep backup copies containing credentials private.
 - **Path safety**: `OPENCLAW_STATE_DIR` must be under `$HOME` and match `.openclaw` or `.openclaw-*`; invalid paths are rejected.
 
 
@@ -157,5 +157,5 @@ systemctl --user daemon-reload
 
 ### 前置条件
 
-- IM 发起卸载需 `host=gateway`，否则 one-shot 在容器内创建会丢失
+- IM 发起卸载需在已核实的网关主机执行；`host=gateway` 仅用于提供该参数的 OpenClaw 运行时。其他宿主使用其受支持的主机执行方式，不关闭沙箱。
 - 支持 macOS、Linux（含 WSL2）；原生 Windows 请用 WSL2 或手动卸载
