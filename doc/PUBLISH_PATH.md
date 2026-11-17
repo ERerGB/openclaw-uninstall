@@ -23,7 +23,7 @@ Complete checklist for publishing the uninstaller skill across all distribution 
 
 | Job | Domain | Command | Secret |
 |-----|--------|---------|--------|
-| verify-copilot-skill | GitHub Copilot | diff SKILL.md ↔ .github/skills/ | — |
+| verify-skill-ssot | GitHub Copilot | diff SKILL.md ↔ .github/skills/ | — |
 | publish-clawhub | ClawHub | `clawhub publish .` | CLAWHUB_TOKEN |
 | publish-sundial | Sundial | `npx sundial-hub push .` | SUNDIAL_TOKEN (skip if unset) |
 | publish-ghcr | ghcr.io (OCI) | `andrewhowdencom/skr` Action | GITHUB_TOKEN (auto) |

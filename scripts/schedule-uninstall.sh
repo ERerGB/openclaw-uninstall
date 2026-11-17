@@ -9,13 +9,13 @@
 #   --preserve-state       Keep ~/.openclaw for reinstall inheritance
 #   --all-profiles         Also remove ~/.openclaw-* profile dirs
 #   --dry-run              Print CMD and exit (for E2E tests)
-# Requires: host=gateway (must run on host, not in sandbox)
+# Run on the verified gateway host using the current runtime’s supported mechanism.
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 UNINSTALL_SCRIPT="${SCRIPT_DIR}/uninstall-oneshot.sh"
-LOG_FILE="/tmp/openclaw-uninstall.log"
+LOG_FILE="${OPENCLAW_UNINSTALL_LOG_FILE:-/tmp/openclaw-uninstall.log}"
 DELAY=15
 
 NOTIFY_EMAIL=""
@@ -27,6 +27,14 @@ ALL_PROFILES=false
 DRY_RUN=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --notify-email|--notify-ntfy|--notify-im)
+      if [[ $# -lt 2 || -z "$2" || "$2" == --* ]]; then
+        echo "Error: $1 requires a value" >&2
+        exit 2
+      fi ;;
+  esac
+  case "$1" in
+    --help) printf "%s\n" "Usage: schedule-uninstall.sh [--notify-email EMAIL] [--notify-ntfy TOPIC] [--notify-im TARGET] [--no-backup] [--preserve-state] [--all-profiles] [--dry-run]"; exit 0 ;;
     --notify-email)   NOTIFY_EMAIL="$2"; shift 2 ;;
     --notify-ntfy)    NOTIFY_NTFY="$2"; shift 2 ;;
     --notify-im)      NOTIFY_IM+=("$2"); shift 2 ;;
@@ -34,9 +42,13 @@ while [[ $# -gt 0 ]]; do
     --preserve-state) PRESERVE_STATE=true; shift ;;
     --all-profiles)   ALL_PROFILES=true; shift ;;
     --dry-run)        DRY_RUN=true; shift ;;
-    *) shift ;;
+    *) echo "Error: unknown option: $1" >&2; exit 2 ;;
   esac
 done
+if [[ "$PRESERVE_STATE" == "true" && "$ALL_PROFILES" == "true" ]]; then
+  echo "Error: --preserve-state cannot be combined with --all-profiles" >&2
+  exit 2
+fi
 
 EXTRA_ARGS=()
 [[ -n "$NOTIFY_EMAIL" ]] && EXTRA_ARGS+=(--notify-email "$NOTIFY_EMAIL")
@@ -46,13 +58,14 @@ for t in "${NOTIFY_IM[@]}"; do [[ -n "$t" ]] && EXTRA_ARGS+=(--notify-im "$t"); 
 [[ "$PRESERVE_STATE" == "true" ]] && EXTRA_ARGS+=(--preserve-state)
 [[ "$ALL_PROFILES" == "true" ]] && EXTRA_ARGS+=(--all-profiles)
 
-# Dry-run: print CMD and exit (for E2E tests)
+# Quote each argument once for every scheduler/fallback path.
+printf -v CMD 'sleep %q && exec %q' "$DELAY" "$UNINSTALL_SCRIPT"
+for argument in "${EXTRA_ARGS[@]}"; do
+  printf -v quoted_argument '%q' "$argument"
+  CMD+=" $quoted_argument"
+done
 if [[ "$DRY_RUN" == "true" ]]; then
-  ARG_STR=""
-  for a in "${EXTRA_ARGS[@]}"; do
-    ARG_STR="$ARG_STR '$a'"
-  done
-  echo "DRY_RUN_CMD: sleep $DELAY && '$UNINSTALL_SCRIPT' $ARG_STR"
+  printf 'DRY_RUN_CMD: %s\n' "$CMD"
   exit 0
 fi
 
@@ -60,21 +73,14 @@ fi
 # and lost when gateway stops. Must run on host (host=gateway).
 if [[ -f /.dockerenv ]]; then
   echo "Error: Docker sandbox detected. schedule-uninstall must run on the host."
-  echo "Ensure Agent calls exec with host=gateway, or run this script manually on the host."
+  echo "Use the current runtime’s supported gateway-host mechanism, or run this script manually on that host."
   exit 1
 fi
 if [[ -f /proc/1/cgroup ]] && grep -q docker /proc/1/cgroup 2>/dev/null; then
   echo "Error: Docker sandbox detected. schedule-uninstall must run on the host."
-  echo "Ensure Agent calls exec with host=gateway, or run this script manually on the host."
+  echo "Use the current runtime’s supported gateway-host mechanism, or run this script manually on that host."
   exit 1
 fi
-
-# Build command string for one-shot
-ARG_STR=""
-for a in "${EXTRA_ARGS[@]}"; do
-  ARG_STR="$ARG_STR '$a'"
-done
-CMD="sleep $DELAY && '$UNINSTALL_SCRIPT' $ARG_STR"
 
 case "$(uname -s)" in
   Darwin)
@@ -84,16 +90,7 @@ case "$(uname -s)" in
     else
       # Fallback: create wrapper script + plist (avoids XML escaping of CMD)
       WRAPPER=$(mktemp /tmp/openclaw-uninstall-XXXXXX.sh)
-      EXEC_LINE="exec '$UNINSTALL_SCRIPT'"
-      for a in "${EXTRA_ARGS[@]}"; do
-        safe=$(printf '%s' "$a" | sed "s/'/'\\\\''/g")
-        EXEC_LINE="$EXEC_LINE '$safe'"
-      done
-      cat > "$WRAPPER" << WRAPEOF
-#!/bin/bash
-sleep $DELAY
-$EXEC_LINE
-WRAPEOF
+      printf '#!/bin/bash\n%s\n' "$CMD" > "$WRAPPER"
       chmod +x "$WRAPPER"
       PLIST_DIR="${TMPDIR:-/tmp}"
       PLIST="$PLIST_DIR/openclaw-uninstall-$$.plist"

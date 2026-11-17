@@ -21,9 +21,16 @@ workflows:
       - "skills"
     metadata:
       jobs:
-        - verify-copilot-skill
+        - verify-skill-ssot
         - publish-clawhub
         - publish-sundial
         - publish-ghcr
         - publish-skillcreator
       trigger: "push to main"
+
+  - name: "offline-tests.yml"
+    description: "Offline contract fixtures; no live uninstall or account calls"
+    check_window: 180
+    expected_duration: 30
+    category: "test"
+    priority: 1

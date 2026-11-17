@@ -22,11 +22,11 @@ You'll get a macOS notification when the workflow completes (success or failure)
 
 ## Pipeline context
 
-The workflow has **3 parallel jobs**:
+The publish workflow has **5 parallel jobs**:
 
 | Job | Domain | Common failure |
 |-----|--------|----------------|
-| verify-copilot-skill | GitHub Copilot | SKILL.md out of sync |
+| verify-skill-ssot | GitHub Copilot | SKILL.md out of sync |
 | publish-clawhub | ClawHub | CLAWHUB_TOKEN missing, clawhub patch |
 | publish-sundial | Sundial | Skips if SUNDIAL_TOKEN unset |
 | publish-ghcr | ghcr.io | skr Action, permissions |

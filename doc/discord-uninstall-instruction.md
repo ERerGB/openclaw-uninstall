@@ -14,8 +14,8 @@ Install: clawhub install uninstaller
 Repo: https://github.com/ERerGB/openclaw-uninstall
 
 流程：
-1. 确认用户意图："确认完全卸载 OpenClaw？回复 confirm 继续。"
-2. 用户回复 confirm 后，执行（必须 host=gateway）：
+1. 核对卸载主机、保留范围与已有授权；仅询问“如何卸载”时不执行。
+2. 具体卸载范围已授权后，在已核实的网关主机执行：
    ./scripts/schedule-uninstall.sh --preserve-state
 3. 回复："卸载已调度，约 15 秒后断开。日志: /tmp/openclaw-uninstall.log"
 
@@ -28,8 +28,8 @@ Repo: https://github.com/ERerGB/openclaw-uninstall
 
 ```
 OpenClaw 卸载：clawhub install uninstaller
-执行：./scripts/schedule-uninstall.sh --preserve-state（host=gateway）
-先确认用户回复 confirm。
+执行：./scripts/schedule-uninstall.sh --preserve-state（在已核实的网关主机）
+仅补齐尚缺的具体授权；不要重复要求已授权范围的 confirm。
 ```
 
 ---
@@ -41,6 +41,6 @@ OpenClaw 卸载：clawhub install uninstaller
 | skill name | uninstaller |
 | install | `clawhub install uninstaller` |
 | schedule | `./scripts/schedule-uninstall.sh --preserve-state` |
-| exec host | gateway（必须，否则 one-shot 无效） |
-| 前置确认 | 用户需回复 confirm |
+| exec host | 当前宿主支持的网关执行方式；host=gateway 只用于支持该参数的 OpenClaw runtime |
+| 前置确认 | 具体卸载范围已有用户授权 |
 | 可选 | `--notify-im discord:channel:ID` 推送结果到 Discord |

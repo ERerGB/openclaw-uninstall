@@ -73,7 +73,7 @@ npx sundial-hub push .       # Publish manually after releases
 
 1. Use the `andrewhowdencom/skr` GitHub Action
 2. Set `registry: ghcr.io`, `username: ${{ github.actor }}`, `password: ${{ secrets.GITHUB_TOKEN }}`
-3. Ensure the workflow has `contents: write` if pushing packages
+3. Ensure the workflow has `packages: write` if pushing packages (plus `contents: read` for checkout)
 
 ---
 

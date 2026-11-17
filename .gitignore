@@ -14,3 +14,7 @@ Thumbs.db
 # ClawHub installs (root-level only; .github/skills/ for Copilot is kept)
 /skills/
 .clawhub/
+
+# Offline Python fixture caches
+__pycache__/
+*.pyc
