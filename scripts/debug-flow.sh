@@ -2,7 +2,7 @@
 # debug-flow.sh — Local debug: install → verify → uninstall flow
 # Usage: ./scripts/debug-flow.sh [step] [--debug]
 #   step: 1=install 2=verify 3=uninstall or omit=interactive
-#   --debug: auto-run uninstall without prompt, use --preserve all
+#   --debug: auto-run uninstall without prompt, use --preserve-state
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -46,23 +46,23 @@ do_verify() {
 # Step 3: Uninstall (confirm)
 do_uninstall() {
   echo "[Step 3] Uninstall"
-  echo "  Option A — IM-initiated (requires host=gateway):"
+  echo "  Option A — IM-initiated (on the verified gateway host):"
   echo "    $SCRIPT_DIR/schedule-uninstall.sh"
   echo ""
   echo "  Option B — CLI one-shot:"
   echo "    openclaw uninstall --all --yes --non-interactive"
   echo ""
-  echo "  Option C — Direct one-shot (with --preserve all):"
-  echo "    $SCRIPT_DIR/uninstall-oneshot.sh --preserve all"
+  echo "  Option C — Direct one-shot (with --preserve-state):"
+  echo "    $SCRIPT_DIR/uninstall-oneshot.sh --preserve-state"
   echo ""
   if [[ "$DEBUG" == "true" ]]; then
     echo "  [DEBUG] Auto-running without prompt..."
-    exec "$SCRIPT_DIR/uninstall-oneshot.sh" --preserve all
+    exec "$SCRIPT_DIR/uninstall-oneshot.sh" --preserve-state
   fi
   read -p "Run Option C (direct uninstall)? [y/N] " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
-    exec "$SCRIPT_DIR/uninstall-oneshot.sh" --preserve all
+    exec "$SCRIPT_DIR/uninstall-oneshot.sh" --preserve-state
   else
     echo "  Skipped. Run one of the commands above manually."
   fi

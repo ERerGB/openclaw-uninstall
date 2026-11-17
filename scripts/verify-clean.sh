@@ -62,19 +62,21 @@ else
   echo "[OK] npm global removed"
 fi
 
-# 6. Processes (pgrep or ps fallback)
+# 6. Match the executable name, not this openclaw-uninstall checker path.
+PROCESS_PATTERN="(^|/|[[:space:]])openclaw(-gateway)?([[:space:]]|$)"
+# Processes (pgrep or ps fallback)
 if command -v pgrep &>/dev/null; then
-  if pgrep -f "openclaw" &>/dev/null; then
+  if pgrep -f "$PROCESS_PATTERN" &>/dev/null; then
     echo "[RESIDUE] Running openclaw process"
-    pgrep -af "openclaw" 2>/dev/null || true
+    pgrep -af "$PROCESS_PATTERN" 2>/dev/null || true
     FOUND=1
   else
     echo "[OK] No openclaw process"
   fi
 else
-  if ps aux 2>/dev/null | grep -v grep | grep -q openclaw; then
+  if ps aux 2>/dev/null | grep -v grep | grep -Eq "$PROCESS_PATTERN"; then
     echo "[RESIDUE] Running openclaw process"
-    ps aux 2>/dev/null | grep -v grep | grep openclaw || true
+    ps aux 2>/dev/null | grep -v grep | grep -E "$PROCESS_PATTERN" || true
     FOUND=1
   else
     echo "[OK] No openclaw process"

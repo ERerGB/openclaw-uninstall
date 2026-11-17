@@ -9,7 +9,7 @@ description: "Guides users through safely uninstalling OpenClaw (龙虾). Use wh
 
 ## Install
 
-Use `clawhub install uninstaller` when installation is requested. Starring a repository or package is a separate optional account action, never an installation prerequisite. The legacy `scripts/install.sh` attempts a star; use the direct install command unless the user also requested that action.
+Use `clawhub install uninstaller` when installation is requested. Starring a repository or package is a separate optional account action, never an installation prerequisite. `scripts/install.sh` installs without starring; add its `--star` option only when the user requested that separate action.
 
 ## Core statement
 
@@ -127,12 +127,12 @@ systemctl --user daemon-reload
 
 ## Notes
 
-- **Backup scope**: The script first attempts `openclaw backup create --no-include-workspace`. Its manual fallback copies selected skills, sessions, configuration and credentials, not the complete workspace. Inspect the resulting archive/copies before relying on them. If a complete backup is required, prepare and verify it separately before scheduling deletion; do not describe an attempted backup as complete. `--no-backup` skips this attempt.
+- **Backup scope**: The script first attempts `openclaw backup create --no-include-workspace`. Its manual fallback copies selected skills, sessions, configuration and credentials, not the complete workspace. Inspect the resulting archive/copies before relying on them. If a complete backup is required, prepare and verify it separately before scheduling deletion; do not describe an attempted backup as complete. A failed backup stops before gateway or state removal. `--no-backup` skips this attempt.
 - **Multiple profiles**: Only the default `~/.openclaw` is removed by default. Use `--all-profiles` to also remove `~/.openclaw-<profile>` dirs.
 - **Remote mode**: Run on the gateway host
 - **Source install**: Uninstall the service first, then remove the repo
 - **IM uninstall failed**: If schedule-uninstall errors (e.g. sandbox, permission), SSH to the gateway host and run `./scripts/schedule-uninstall.sh` or `./scripts/uninstall-oneshot.sh` manually
-- **Preserve data**: Use `--preserve-state` to retain the selected state directory; this also skips its backup. Selective `--preserve` is not implemented. Do not combine preservation with `--all-profiles`: the latter still removes other profile directories. Keep backup copies containing credentials private.
+- **Preserve data**: Use `--preserve-state` to retain the selected state directory; this also skips its backup. Selective `--preserve` is not implemented. Preservation combined with `--all-profiles` is rejected. Keep backup copies containing credentials private.
 - **Path safety**: `OPENCLAW_STATE_DIR` must be under `$HOME` and match `.openclaw` or `.openclaw-*`; invalid paths are rejected.
 
 

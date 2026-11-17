@@ -11,7 +11,8 @@
 
 set -e
 
-LOG_FILE="/tmp/openclaw-uninstall.log"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LOG_FILE="${OPENCLAW_UNINSTALL_LOG_FILE:-/tmp/openclaw-uninstall.log}"
 NOTIFY_EMAIL=""
 NOTIFY_NTFY=""
 declare -a NOTIFY_IM=()
@@ -23,6 +24,14 @@ declare -a ERRORS=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --notify-email|--notify-ntfy|--notify-im)
+      if [[ $# -lt 2 || -z "$2" || "$2" == --* ]]; then
+        echo "Error: $1 requires a value" >&2
+        exit 2
+      fi ;;
+  esac
+  case "$1" in
+    --help) printf "%s\n" "Usage: uninstall-oneshot.sh [--notify-email EMAIL] [--notify-ntfy TOPIC] [--notify-im TARGET] [--no-backup] [--preserve-state] [--all-profiles] [--dry-run]"; exit 0 ;;
     --notify-email)  NOTIFY_EMAIL="$2"; shift 2 ;;
     --notify-ntfy)   NOTIFY_NTFY="$2"; shift 2 ;;
     --notify-im)     NOTIFY_IM+=("$2"); shift 2 ;;
@@ -30,9 +39,13 @@ while [[ $# -gt 0 ]]; do
     --preserve-state) PRESERVE_STATE=true; shift ;;
     --all-profiles)  ALL_PROFILES=true; shift ;;
     --dry-run)       DRY_RUN=true; shift ;;
-    *) shift ;;
+    *) echo "Error: unknown option: $1" >&2; exit 2 ;;
   esac
 done
+if [[ "$PRESERVE_STATE" == "true" && "$ALL_PROFILES" == "true" ]]; then
+  echo "Error: --preserve-state cannot be combined with --all-profiles" >&2
+  exit 2
+fi
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 
@@ -78,32 +91,14 @@ fi
 
 # 0. Backup via openclaw backup create (unless --no-backup or --preserve-state)
 BACKUP_ARCHIVE=""
-if [[ "$PRESERVE_STATE" != "true" ]] && [[ "$NO_BACKUP" != "true" ]] && [[ -d "$STATE_DIR" ]]; then
+BACKUP_DIR=""
+if [[ "$PRESERVE_STATE" != "true" && "$NO_BACKUP" != "true" && -d "$STATE_DIR" ]]; then
   BACKUP_DIR="$HOME/.openclaw-backup-$(date '+%Y%m%d-%H%M%S')"
-  mkdir -p "$BACKUP_DIR" || { log "ERROR: Failed to create backup dir"; ERRORS+=("backup-dir"); }
-  if [[ ${#ERRORS[@]} -eq 0 ]]; then
-    if command -v openclaw &>/dev/null; then
-      log "Creating backup via openclaw backup create..."
-      if openclaw backup create --output "$BACKUP_DIR" --no-include-workspace 2>/dev/null; then
-        BACKUP_ARCHIVE=$(ls -t "$BACKUP_DIR"/*.tar.gz 2>/dev/null | head -1)
-        [[ -n "$BACKUP_ARCHIVE" ]] && log "Backup complete: $BACKUP_ARCHIVE" || log "Backup created but archive path not found"
-      else
-        log "openclaw backup create failed; falling back to manual copy"
-        cp -r "$STATE_DIR/skills" "$BACKUP_DIR/" 2>/dev/null || true
-        cp -r "$STATE_DIR/sessions" "$BACKUP_DIR/" 2>/dev/null || true
-        [[ -f "$STATE_DIR/openclaw.json" ]] && cp "$STATE_DIR/openclaw.json" "$BACKUP_DIR/" 2>/dev/null || true
-        [[ -d "$STATE_DIR/credentials" ]] && cp -r "$STATE_DIR/credentials" "$BACKUP_DIR/" 2>/dev/null || true
-        log "Backup complete (manual): $BACKUP_DIR"
-      fi
-    else
-      log "openclaw not found; manual backup only"
-      cp -r "$STATE_DIR/skills" "$BACKUP_DIR/" 2>/dev/null || true
-      cp -r "$STATE_DIR/sessions" "$BACKUP_DIR/" 2>/dev/null || true
-      [[ -f "$STATE_DIR/openclaw.json" ]] && cp "$STATE_DIR/openclaw.json" "$BACKUP_DIR/" 2>/dev/null || true
-      [[ -d "$STATE_DIR/credentials" ]] && cp -r "$STATE_DIR/credentials" "$BACKUP_DIR/" 2>/dev/null || true
-      log "Backup complete (manual): $BACKUP_DIR"
-    fi
+  if ! BACKUP_ARCHIVE=$(bash "$SCRIPT_DIR/backup-state.sh" "$STATE_DIR" "$BACKUP_DIR"); then
+    log "FATAL: Backup failed; state and gateway have not been removed. Inspect the backup or explicitly choose --no-backup."
+    exit 1
   fi
+  log "Limited backup saved: $BACKUP_ARCHIVE (does not include the complete workspace)"
 fi
 
 # 0b. Push backup info to IM channels (before stopping gateway; requires gateway running)

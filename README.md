@@ -14,7 +14,7 @@ clawhub install uninstaller
 npx skills add ERerGB/openclaw-uninstall
 ```
 
-Or star first, then install (recommended):
+Or use the installation helper (starring requires a separate explicit `--star` option):
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/ERerGB/openclaw-uninstall/main/scripts/install.sh)"

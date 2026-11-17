@@ -1,4 +1,6 @@
-# Plan: Selective Preservation of ~/.openclaw for Reinstall Inheritance
+# Historical plan: Preserve state for reinstall inheritance
+
+Status: `--preserve-state` is implemented. This document records its original plan; the current executable contract is in SKILL.md and scripts/. Selective subdirectory preservation remains unimplemented.
 
 ## Context
 
