@@ -6,10 +6,10 @@ Community-maintained uninstall skill for OpenClaw. Scripts: `install.sh`, `sched
 
 ## Offline contract tests
 
-`./tests/run-e2e.sh` is the historical entrypoint for `tests/test_offline.py`.
+`./tests/run-e2e.sh` is the historical entrypoint for the offline `tests/test_*.py` suite.
 It checks installation account actions, strict argument handling, shell quoting,
 state-path dry runs and limited-backup success/failure with temporary fixtures and
-stub commands. It does not schedule or execute a live uninstall, contact ClawHub,
+stub commands, including failed service teardown gates. It does not schedule or execute a live uninstall, contact ClawHub,
 operate launchd/systemd, or replace the process HOME.
 
 Run:
