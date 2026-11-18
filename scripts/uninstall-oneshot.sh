@@ -124,29 +124,63 @@ if [[ ${#NOTIFY_IM[@]} -gt 0 ]] && command -v openclaw &>/dev/null; then
   done
 fi
 
-# 1. Stop gateway (if CLI available)
+# 1. Service teardown is a gate for every later removal. A failed manager query
+# is not proof that the service is absent. Use the CLI when it still owns the install.
+service_failure() {
+  log "FATAL: Gateway teardown is unverified ($1); state, CLI and app removal stopped. Inspect the selected service before retrying."
+  exit 1
+}
+
 if command -v openclaw &>/dev/null; then
   log "Stopping gateway..."
-  openclaw gateway stop 2>/dev/null || true
+  openclaw gateway stop || service_failure "gateway stop failed"
   log "Uninstalling gateway service..."
-  openclaw gateway uninstall 2>/dev/null || true
-fi
+  openclaw gateway uninstall || service_failure "gateway uninstall failed"
 
-# 2. Manual service removal (if CLI gone or as backup)
-case "$(uname -s)" in
-  Darwin)
-    launchctl bootout "gui/$UID/ai.openclaw.gateway" 2>/dev/null || true
-    rm -f ~/Library/LaunchAgents/ai.openclaw.gateway.plist
-    for f in ~/Library/LaunchAgents/com.openclaw.*.plist; do
-      [[ -f "$f" ]] && rm -f "$f"
+  # Additional profile state must not be removed while its own service can run.
+  if [[ "$ALL_PROFILES" == "true" ]]; then
+    for profile_dir in "$HOME"/.openclaw-*; do
+      [[ -d "$profile_dir" ]] || continue
+      [[ "$profile_dir" == *"/.openclaw-backup-"* ]] && continue
+      profile_name="${profile_dir##*/.openclaw-}"
+      [[ -n "$profile_name" ]] || service_failure "empty profile name"
+      openclaw --profile "$profile_name" gateway stop || service_failure "profile gateway stop failed"
+      openclaw --profile "$profile_name" gateway uninstall || service_failure "profile gateway uninstall failed"
     done
-    ;;
-  Linux)
-    systemctl --user disable --now openclaw-gateway.service 2>/dev/null || true
-    rm -f ~/.config/systemd/user/openclaw-gateway.service
-    systemctl --user daemon-reload 2>/dev/null || true
-    ;;
-esac
+  fi
+else
+  # Native fallback is intentionally bounded to the default service. Custom/profile
+  # installations need their actual labels resolved through the manual workflow.
+  if [[ "$ALL_PROFILES" == "true" || -n "${OPENCLAW_PROFILE:-}" || "$STATE_DIR_CANON" != "$HOME/.openclaw" ]]; then
+    service_failure "CLI missing for a custom/profile installation"
+  fi
+  case "$(uname -s)" in
+    Darwin)
+      service_target="gui/$UID/ai.openclaw.gateway"
+      launchctl print "$service_target" >/dev/null 2>&1 || service_failure "launchd state unavailable or service not loaded"
+      launchctl bootout "$service_target" || service_failure "launchd bootout failed"
+      if launchctl print "$service_target" >/dev/null 2>&1; then
+        service_failure "launchd service still loaded"
+      fi
+      rm -f "$HOME/Library/LaunchAgents/ai.openclaw.gateway.plist" || service_failure "launchd definition removal failed"
+      ;;
+    Linux)
+      service_load=$(systemctl --user show openclaw-gateway.service --property=LoadState --value) || service_failure "systemd user manager unavailable"
+      case "$service_load" in
+        loaded|not-found) ;;
+        *) service_failure "unsupported systemd load state" ;;
+      esac
+      if [[ "$service_load" == "loaded" ]]; then
+        systemctl --user disable --now openclaw-gateway.service || service_failure "systemd teardown failed"
+      fi
+      service_active=$(systemctl --user show openclaw-gateway.service --property=ActiveState --value) || service_failure "systemd state unavailable"
+      [[ "$service_active" == "inactive" ]] || service_failure "systemd service not inactive"
+      rm -f "$HOME/.config/systemd/user/openclaw-gateway.service" || service_failure "systemd definition removal failed"
+      systemctl --user daemon-reload || service_failure "systemd reload failed"
+      ;;
+    *) service_failure "unsupported native service manager" ;;
+  esac
+fi
 
 # 3. Delete state dir (validated above; skip when --preserve-state)
 if [[ "$PRESERVE_STATE" == "true" ]]; then

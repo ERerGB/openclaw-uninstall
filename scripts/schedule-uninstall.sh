@@ -122,7 +122,7 @@ PLISTEOF
       (nohup bash -c "$CMD" >> "$LOG_FILE" 2>&1 &)
       disown -a 2>/dev/null || true
       echo "Linux uninstall scheduled (nohup), will run in ~${DELAY}s."
-      echo "If systemd is disabled, ensure: loginctl enable-linger \$USER"
+      echo "Check that this fallback survives the current session; do not change lingering policy without authorization."
     fi
     ;;
   *)
